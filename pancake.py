@@ -88,23 +88,23 @@ def checkTreeForDups(tree, stack):
 def createTree(arr):
 
     ## Parent Node ##
-    ROOT = Node(arr)
+    ROOT = Node(arr, g=0)
 
     ## Makes the first 3 leaf nodes for parent then begins recursion ## 
     for x in range(3):
         tmp = arr[:]
         flip(tmp, x + 2)
-        tmpNode = Node(tmp, parent=ROOT, g=x+1)
+        tmpNode = Node(tmp, parent=ROOT, g=x+2)
         makeLeaves(tmp, tmpNode, ROOT, 0)
         global recursionVAR
         recursionVAR = 0
 
     ## Print Tree for viewing purposes ##
 
-    for pre, _, node in RenderTree(ROOT):
+    '''for pre, _, node in RenderTree(ROOT):
         print("%s%s" % (pre, node.name))
 
-    print("\n ######################## GRAPH #############################")
+    print("\n ######################## GRAPH #############################")'''
 
     return ROOT
 
@@ -121,15 +121,15 @@ def makeLeaves(arr, node, rootNode, iterator):
             flip(tmp, x+1)
             ## Check for duplicates before continuing ##
             if(tmp != arr):
-                tmpNode = Node(tmp, parent=node, g=x+1)
+                value = node.g
+                tmpNode = Node(tmp, parent=node, g=(x+1) + value)
                 ## Set recursion value, used for testing will change when bigger trees are required ## 
-                if(iterator < 2):
+                if(iterator < 6):
                     iterator = iterator + 1
                     makeLeaves(tmp, tmpNode, rootNode, iterator)
-                    print(tmpNode.g)
     
 
-def printProcess(arr, i):
+def printProcess(arr, i, g, h):
     output = ""
     for x in range(4):
         if(x == i):
@@ -137,45 +137,76 @@ def printProcess(arr, i):
             output+=str(arr[x])
         else:
             output+=str(arr[x])
-    print(output)
+    print(output + "  g=" + str(g) + ", h=" + str(h))
 
 def findDifference(parent, child):
     for i in range(4):
         if(parent[i] != child[i]):
             return i
 
+def findGValue(num):
+    if(num == 0):
+        return 4
+    elif(num == 1):
+        return 3
+    elif(num == 2):
+        return 2
+    else:
+        return 1
+
 ##### Implementing Fringe #####
+
+### Using anytree API I will find all goal nodes created in the graph. ###
+def findAllGoalNodes(tree, typeSearch):
+
+    goalNodes = anytree.findall(tree, filter_=lambda node: node.name == ["4", "3", "2", "1", typeSearch])
+    return goalNodes
+
+def searchForLowestCost(nodes):
+    lowestCost = 100
+    tmp = nodes[0]
+    for goal in nodes:
+        if goal.g < lowestCost:
+            lowestCost = goal.g
+            tmp = goal
+    
+    return tmp
+        
 
 ### DFS Algorithm. ###
 def DFS(arr):
     goalNode = arr
-
+    gValue = 0
     ## Run DFS until goal node is found. ##    
     while(checkSuccess(goalNode.name) == False):
         children = goalNode.children
         totalChildren = len(children)
-
         ## If only one child print and continue. ##
         if(totalChildren == 1):
             num = findDifference(goalNode.name, children.name)
-            printProcess(goalNode.name, num)
+            numValue = findGValue(num)
+            gValue = numValue + gValue
+            printProcess(goalNode.name, num, gValue, "DNE")
             goalNode = children
-
         ## For two or more children run a tie breaker and print result. ##
         elif(totalChildren == 2):
             originalNode = goalNode
             goalNode = tieBreaker(children[0], children[1])
             num = findDifference(originalNode.name, goalNode.name)
-            printProcess(originalNode.name, num)
+            numValue = findGValue(num)
+            gValue = numValue + gValue
+            printProcess(originalNode.name, num, gValue, "DNE")
         elif(totalChildren == 3):
             originalNode = goalNode
             tmp = tieBreaker(children[0], children[1])
             goalNode = tieBreaker(tmp, children[2])
             num = findDifference(originalNode.name, goalNode.name)
-            printProcess(originalNode.name, num)
+            numValue = findGValue(num)
+            gValue = numValue + gValue
+            printProcess(originalNode.name, num, gValue, "DNE")
 
     ## Printing final process node ##
-    printProcess(goalNode.name, 10)
+    printProcess(goalNode.name, 10, gValue, "DNE")
     
 
 ### A* Algorithm. ###
@@ -188,9 +219,23 @@ def greedy(arr):
 
 ### UCS Algorithm. ###
 def UCS(arr):
-    print("working on it")
+    nodes = findAllGoalNodes(arr, "u")
+    UCSNode = searchForLowestCost(nodes)
+    
+    node = UCSNode.root
 
-
+    for i in range(len(UCSNode.path)):
+        node = UCSNode.path[i]
+        
+        if(checkSuccess(node.name) != True):
+            num = findDifference(node.name, UCSNode.path[i + 1].name)
+            printProcess(node.name, num, node.g, "DNE")
+        else:
+            printProcess(node.name, 10, node.g, "DNE")
+        
+        
+        
+    
 
 ### Main function, user input and function calls. ###
 def main():
