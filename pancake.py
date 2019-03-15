@@ -88,20 +88,22 @@ def checkTreeForDups(tree, stack):
 def createTree(arr):
 
     ## Parent Node ##
-    ROOT = Node(arr, g=0)
+    hVal = makeHeuristic(arr)
+    ROOT = Node(arr, g=0, h=hVal)
 
     ## Makes the first 3 leaf nodes for parent then begins recursion ## 
     for x in range(3):
         tmp = arr[:]
         flip(tmp, x + 2)
-        tmpNode = Node(tmp, parent=ROOT, g=x+2)
+        hVal = makeHeuristic(tmp)
+        tmpNode = Node(tmp, parent=ROOT, g=x+2, h=hVal)
         makeLeaves(tmp, tmpNode, ROOT, 0)
         global recursionVAR
         recursionVAR = 0
 
     ## Print Tree for viewing purposes ##
 
-    '''for pre, _, node in RenderTree(ROOT):
+    ''' for pre, _, node in RenderTree(ROOT):
         print("%s%s" % (pre, node.name))
 
     print("\n ######################## GRAPH #############################")'''
@@ -121,10 +123,11 @@ def makeLeaves(arr, node, rootNode, iterator):
             flip(tmp, x+1)
             ## Check for duplicates before continuing ##
             if(tmp != arr):
-                value = node.g
-                tmpNode = Node(tmp, parent=node, g=(x+1) + value)
+                Gvalue = node.g
+                hVal = makeHeuristic(tmp)
+                tmpNode = Node(tmp, parent=node, g=(x+1) + Gvalue, h=hVal)
                 ## Set recursion value, used for testing will change when bigger trees are required ## 
-                if(iterator < 6):
+                if(iterator < 10):
                     iterator = iterator + 1
                     makeLeaves(tmp, tmpNode, rootNode, iterator)
     
@@ -154,8 +157,6 @@ def findGValue(num):
     else:
         return 1
 
-##### Implementing Fringe #####
-
 ### Using anytree API I will find all goal nodes created in the graph. ###
 def findAllGoalNodes(tree, typeSearch):
 
@@ -171,6 +172,16 @@ def searchForLowestCost(nodes):
             tmp = goal
     
     return tmp
+
+def makeHeuristic(arr):
+    if(arr[0] != "4"):
+        return 4
+    elif(arr[1] != "3"):
+        return 3
+    elif(arr[2] != "2"):
+        return 2
+    else:
+        return 0
         
 
 ### DFS Algorithm. ###
@@ -215,8 +226,38 @@ def aStar(arr):
 
 ### Greedy Algorithm. ###
 def greedy(arr):
-    print("greedy")
+    nodes =findAllGoalNodes(arr, "g")
+    goalNodePaths = []
 
+    ## Create an array of all the paths ##
+    for node in nodes:
+        goalNodePaths.append(node.path)
+
+    ## Going to iterate throught to determine which has lowest hueristic cost ##
+    lowestHeristicCost = 1000
+    tmp = goalNodePaths[0]
+    for path in goalNodePaths:
+        hCost = 0
+        for node in path:
+            hCost = hCost + node.h
+
+        if (hCost < lowestHeristicCost):
+            lowestHeristicCost = hCost
+            tmp = path
+
+    ## Now we have our path, time to print ##
+
+    for i in range(len(tmp)):
+        node = tmp[i]
+        
+        if(checkSuccess(node.name) != True):
+            num = findDifference(node.name, tmp[i+1].name)
+            printProcess(node.name, num, node.g, node.h)
+        else:
+            printProcess(node.name, 10, node.g, node.h)
+    
+
+    
 ### UCS Algorithm. ###
 def UCS(arr):
     nodes = findAllGoalNodes(arr, "u")
@@ -234,9 +275,6 @@ def UCS(arr):
             printProcess(node.name, 10, node.g, "DNE")
         
         
-        
-    
-
 ### Main function, user input and function calls. ###
 def main():
     stack = raw_input("Gimme a pancake\n")
