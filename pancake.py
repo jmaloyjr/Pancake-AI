@@ -222,11 +222,7 @@ def DFS(arr):
 
 ### A* Algorithm. ###
 def aStar(arr):
-    print("a*")
-
-### Greedy Algorithm. ###
-def greedy(arr):
-    nodes =findAllGoalNodes(arr, "g")
+    nodes = findAllGoalNodes(arr, "a")
     goalNodePaths = []
 
     ## Create an array of all the paths ##
@@ -234,6 +230,38 @@ def greedy(arr):
         goalNodePaths.append(node.path)
 
     ## Going to iterate throught to determine which has lowest hueristic cost ##
+    lowestCost = 1000
+    tmp = goalNodePaths[0]
+    for path in goalNodePaths:
+        cost = 0
+        for node in path:
+            cost = cost + node.g + node.h
+
+        if (cost < lowestCost):
+            lowestCost = cost
+            tmp = path
+
+    ## Now we have our path, time to print ##
+    for i in range(len(tmp)):
+        node = tmp[i]
+        
+        if(checkSuccess(node.name) != True):
+            num = findDifference(node.name, tmp[i+1].name)
+            printProcess(node.name, num, node.g, node.h)
+        else:
+            printProcess(node.name, 10, node.g, node.h)
+    
+
+### Greedy Algorithm. ###
+def greedy(arr):
+    nodes = findAllGoalNodes(arr, "g")
+    goalNodePaths = []
+
+    ## Create an array of all the paths ##
+    for node in nodes:
+        goalNodePaths.append(node.path)
+
+    ## Going to iterate throught to determine which has lowest hueristic cost + path cost ##
     lowestHeristicCost = 1000
     tmp = goalNodePaths[0]
     for path in goalNodePaths:
@@ -246,7 +274,6 @@ def greedy(arr):
             tmp = path
 
     ## Now we have our path, time to print ##
-
     for i in range(len(tmp)):
         node = tmp[i]
         
@@ -277,7 +304,7 @@ def UCS(arr):
         
 ### Main function, user input and function calls. ###
 def main():
-    stack = raw_input("Gimme a pancake\n")
+    stack = raw_input("Input a pancake in the format ####L\nThe algorithm will then create a tree and based off \nyour input and desiered algorithm print out the solution.\n####d = DFS ####u = UCS ####g = Greedy ####a = A*\n")
     stack = list(stack)
 
     ### Check initial list ###
