@@ -127,7 +127,7 @@ def makeLeaves(arr, node, rootNode, iterator):
                 hVal = makeHeuristic(tmp)
                 tmpNode = Node(tmp, parent=node, g=(x+1) + Gvalue, h=hVal)
                 ## Set recursion value, used for testing will change when bigger trees are required ## 
-                if(iterator < 10):
+                if(iterator < 12):
                     iterator = iterator + 1
                     makeLeaves(tmp, tmpNode, rootNode, iterator)
     
